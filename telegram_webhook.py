@@ -36,8 +36,9 @@ app = Flask(__name__)
 @app.route('/webhook', methods=['POST'])
 def webhook():
     try:
-        data = request.get_json()
-        print("🌐 Webhook received raw payload:", data)
+        data = request.get_json(force=True)  # force=True helps avoid bad content-type issues
+        print("✅ Webhook hit")
+        print("📦 Raw data received:", data)
 
         if not data:
             print("❌ No data received.")
@@ -47,7 +48,7 @@ def webhook():
             print("📩 Message content:", data['message'])
             chat_id = str(data['message']['chat']['id'])
             text = data['message'].get('text', '')
-            print(f"👤 From chat_id {chat_id}, user said: {text}")
+            print(f"👤 Chat ID: {chat_id}, Message: {text}")
 
             if text.lower() == "/start":
                 save_chat_id(chat_id)
@@ -56,8 +57,11 @@ def webhook():
         return "ok", 200
 
     except Exception as e:
-        print("❌ Webhook crashed with error:", e)
+        import traceback
+        print("❌ Webhook crashed with error:")
+        traceback.print_exc()  # This will show the full error with line number
         return f"Error: {e}", 500
+
 
 
 @app.route('/run-weather-agent', methods=['GET'])
