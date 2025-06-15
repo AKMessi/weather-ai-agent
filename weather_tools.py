@@ -7,7 +7,6 @@ from datetime import datetime
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.tools import Tool, tool
 import json
-from drive_helper import authenticate, read_chat_ids_file
 
 
 load_dotenv()
@@ -140,8 +139,7 @@ def get_all_chat_ids():
 def send_telegram_tool(summary: str) -> str:
     """Sends the weather summary to all Telegram users from chat_ids.txt on Google Drive."""
     try:
-        drive = authenticate()
-        chat_ids, _ = read_chat_ids_file(drive)
+        chat_ids = get_all_chat_ids()
 
         token = os.getenv("TELEGRAM_BOT_TOKEN")
         if not token:
