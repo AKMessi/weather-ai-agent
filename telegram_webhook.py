@@ -5,6 +5,31 @@ from langchain.agents import initialize_agent, AgentType
 from langchain_google_genai import ChatGoogleGenerativeAI
 from datetime import datetime
 import requests
+import gdown
+from drive_helper import authenticate, read_chat_ids_file, write_chat_ids_file
+
+def download_credentials():
+    credentials_path = "credentials.json"
+    if not os.path.exists(credentials_path):
+        # Google Drive file ID extracted from the shared link
+        file_id = "1yL-ZL6fcUUWQNHtXk0GMx-5MLs0Mzykx"
+        url = f"https://drive.google.com/uc?id={file_id}"
+        print("⬇️ Downloading credentials.json from Google Drive...")
+        gdown.download(url, credentials_path, quiet=False)
+
+
+chat_ids = set()
+
+# Load chat IDs into memory once on startup
+def load_chat_ids():
+    file_path = "chat_ids.txt"
+    if os.path.exists(file_path):
+        with open(file_path, "r") as f:
+            for line in f:
+                chat_ids.add(line.strip())
+
+load_chat_ids()
+
 
 app = Flask(__name__)
 
@@ -66,18 +91,12 @@ def run_weather_agent():
 
 
 def save_chat_id(chat_id):
-    file_path = "chat_ids.txt"
-
-    if os.path.exists(file_path):
-        with open(file_path, "r") as f:
-            existing = set(line.strip() for line in f)
-    else:
-        existing = set()
-
-    if chat_id not in existing:
-        with open(file_path, "a") as f:
-            f.write(chat_id + "\n")
-        print(f"✅ Chat ID {chat_id} added.")
+    drive = authenticate()
+    chat_ids, file_id = read_chat_ids_file(drive)
+    if chat_id not in chat_ids:
+        chat_ids.add(chat_id)
+        write_chat_ids_file(drive, chat_ids, file_id)
+        print(f"✅ Chat ID {chat_id} added to Google Drive.")
     else:
         print(f"ℹ️ Chat ID {chat_id} already exists.")
 
@@ -103,4 +122,5 @@ def send_welcome_message(chat_id):
 
 
 if __name__ == "__main__":
+    download_credentials()
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
