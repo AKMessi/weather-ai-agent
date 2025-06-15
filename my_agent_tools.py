@@ -117,10 +117,15 @@ def summarize_weather_tool(tool_input) -> str:
         if isinstance(tool_input, str):
             tool_input = json.loads(tool_input.replace("'", '"'))
 
+        # Extract only the 'data' part if wrapped inside 'status'
+        if isinstance(tool_input, dict) and "data" in tool_input:
+            tool_input = tool_input["data"]
+
         return summarize_weather(tool_input)
 
     except Exception as e:
         return f"Error summarizing: {e}"
+
 
 def get_all_chat_ids():
     try:
@@ -131,6 +136,7 @@ def get_all_chat_ids():
 
 @tool
 def send_telegram_tool(message: str) -> str:
+    """Sends a weather forecast/updates message to all the telegram chat ids."""
     import requests
     token = os.getenv("TELEGRAM_BOT_TOKEN")
     chat_ids = get_all_chat_ids()
