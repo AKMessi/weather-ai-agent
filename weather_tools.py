@@ -12,6 +12,7 @@ from drive_helper import authenticate, read_chat_ids_file
 
 load_dotenv()
 gemini_api_key = os.getenv("GEMINI_API_KEY")
+bot_token = os.getenv("TELEGRAM_TOKEN")
 
 from datetime import datetime
 import requests
@@ -137,23 +138,26 @@ def get_all_chat_ids():
 
 @tool
 def send_telegram_tool(summary: str) -> str:
-    """Sends the summarized weather update to all subscribed Telegram users."""
-    drive = authenticate()
-    chat_ids, _ = read_chat_ids_file(drive)
+    """Sends the weather summary to all Telegram users from chat_ids.txt on Google Drive."""
+    try:
+        drive = authenticate()
+        chat_ids, _ = read_chat_ids_file(drive)
 
-    token = os.getenv("TELEGRAM_BOT_TOKEN")
-    if not token:
-        return "TELEGRAM_BOT_TOKEN not found."
+        token = os.getenv("TELEGRAM_BOT_TOKEN")
+        if not token:
+            return "❌ TELEGRAM_BOT_TOKEN not found."
 
-    url = f"https://api.telegram.org/bot{token}/sendMessage"
-    for chat_id in chat_ids:
-        payload = {
-            "chat_id": chat_id,
-            "text": summary
-        }
-        try:
-            requests.post(url, data=payload)
-        except Exception as e:
-            print(f"Failed to send to {chat_id}: {e}")
-    
-    return f"Sent weather update to {len(chat_ids)} Telegram user(s)."
+        for chat_id in chat_ids:
+            try:
+                response = requests.post(
+                    f"https://api.telegram.org/bot{bot_token}/sendMessage",
+                    data={"chat_id": chat_id, "text": summary}
+                )
+                print(f"✅ Sent to {chat_id}, status: {response.status_code}")
+            except Exception as e:
+                print(f"❌ Failed to send to {chat_id}: {e}")
+
+        return f"✅ Sent summary to {len(chat_ids)} chat(s)"
+
+    except Exception as e:
+        return f"❌ Failed to authenticate/send: {e}"
