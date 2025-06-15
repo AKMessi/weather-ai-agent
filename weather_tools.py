@@ -7,7 +7,6 @@ from datetime import datetime
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.tools import Tool, tool
 import json
-from telegram_webhook import chat_ids
 
 
 load_dotenv()
@@ -97,7 +96,7 @@ def summarize_weather(weather_data: dict) -> str:
 
 
 
-@tool("get_today_weather_tool")
+@tool
 def get_today_weather_tool(city: str = "Mumbai") -> dict:
     """Gets today's weather for a city."""
     # This handles cases where input is like "city='Mumbai'"
@@ -136,20 +135,24 @@ def get_all_chat_ids():
         return []
 
 @tool
-def send_telegram_tool(message: str) -> str:
-    """Sends a weather forecast/updates message to all the telegram chat ids."""
-    import requests
+def send_telegram_tool(summary: str) -> str:
+    """Sends the summarized weather update to all subscribed Telegram users."""
+    drive = authenticate()
+    chat_ids, _ = read_chat_ids_file(drive)
+
     token = os.getenv("TELEGRAM_BOT_TOKEN")
-    chat_ids = get_all_chat_ids()
+    if not token:
+        return "TELEGRAM_BOT_TOKEN not found."
 
-    if not chat_ids:
-        return "No chat IDs to send."
-
+    url = f"https://api.telegram.org/bot{token}/sendMessage"
     for chat_id in chat_ids:
-        url = f"https://api.telegram.org/bot{token}/sendMessage"
-        data = {"chat_id": chat_id, "text": message}
+        payload = {
+            "chat_id": chat_id,
+            "text": summary
+        }
         try:
-            requests.post(url, data=data)
+            requests.post(url, data=payload)
         except Exception as e:
-            print(f"Error sending to {chat_id}: {e}")
-    return "Message sent to all users."
+            print(f"Failed to send to {chat_id}: {e}")
+    
+    return f"Sent weather update to {len(chat_ids)} Telegram user(s)."
