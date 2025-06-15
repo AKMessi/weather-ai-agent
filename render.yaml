@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: weather-ai-agent
+    env: python
+    plan: free
+    branch: main  # or whatever your default branch is
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn weather_trigger:app"
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
