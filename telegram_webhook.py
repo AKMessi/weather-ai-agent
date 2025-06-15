@@ -13,7 +13,7 @@ app = Flask(__name__)
 @app.route('/webhook', methods=['POST'])
 def webhook():
     data = request.get_json()
-    
+
     if 'message' in data:
         text = data['message'].get('text', '')
         chat_id = str(data['message']['chat']['id'])
@@ -22,6 +22,8 @@ def webhook():
             print(f"New user: {chat_id}")
             save_chat_id(chat_id)
             send_welcome_message(chat_id)
+    
+    return "ok", 200   # ✅ Make sure this line is always returned
 
 # Weather trigger route
 @app.route('/run-weather-agent', methods=['GET'])
