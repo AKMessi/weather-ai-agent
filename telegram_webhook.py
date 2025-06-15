@@ -106,7 +106,7 @@ def save_chat_id(chat_id):
 
 
 def send_welcome_message(chat_id):
-    token = os.getenv("TELEGRAM_BOT_TOKEN")
+    token = os.getenv("TELEGRAM_TOKEN")
     if not token:
         print("❌ TELEGRAM_BOT_TOKEN is missing from environment variables.")
         return
