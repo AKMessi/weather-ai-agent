@@ -141,7 +141,7 @@ def send_telegram_tool(summary: str) -> str:
     try:
         chat_ids = get_all_chat_ids()
 
-        token = os.getenv("TELEGRAM_TOKEN")
+        token = os.environ["TELEGRAM_TOKEN"]
         if not token:
             return "❌ TELEGRAM_BOT_TOKEN not found."
 
