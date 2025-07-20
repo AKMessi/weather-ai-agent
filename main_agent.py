@@ -7,7 +7,7 @@ from datetime import datetime
 
 # Load environment variables
 load_dotenv()
-gemini_api_key = os.getenv("GEMINI_API_KEY")
+gemini_api_key = os.environ["GEMINI_API_KEY"]
 
 # Initialize LLM
 llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", api_key=gemini_api_key)
